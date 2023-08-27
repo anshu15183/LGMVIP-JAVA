@@ -2,5 +2,10 @@
 
 
 01- Currency Converter created using Java programming language, Java Servlets Web Features, Applet, and Ajax.
-    The purpose of this Java project is to convert a currency from one to another. 
-02- Java, Java Swing, Java GUI (Graphical User Interface), and JFrame.
+    
+02- Tic Tac Toe using Java, Java Swing, Java GUI (Graphical User Interface), and JFrame.
+
+03- Scientific calcilator using Java, Java Swing, Java AWT, and OOPS.
+
+05- Text Editor using Java, Java Swing, Java AWT, JTextArea, JMenuBar, JMenu, and JMenuItems.
+    
