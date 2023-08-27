@@ -1,0 +1,156 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.print.PrinterException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
+public class TextEditor extends JFrame implements ActionListener {
+    private JTextArea textArea;
+    private JMenuBar menuBar;
+    private JMenu fileMenu, editMenu;
+    private JMenuItem openItem, saveItem, printItem, exitItem, cutItem, copyItem, pasteItem;
+
+    public TextEditor() {
+        // Set up the main window
+        setTitle("Text Editor");
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Create text area and scroll pane
+        textArea = new JTextArea();
+        textArea.setFont(new Font("Arial", Font.PLAIN, 16));
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        add(scrollPane, BorderLayout.CENTER);
+
+        // Create menu bar
+        menuBar = new JMenuBar();
+
+        // Create "File" menu
+        fileMenu = new JMenu("File");
+        openItem = new JMenuItem("Open");
+        saveItem = new JMenuItem("Save");
+        printItem = new JMenuItem("Print");
+        exitItem = new JMenuItem("Exit");
+
+        // Add action listeners to menu items
+        openItem.addActionListener(this);
+        saveItem.addActionListener(this);
+        printItem.addActionListener(this);
+        exitItem.addActionListener(this);
+
+        // Add items to "File" menu
+        fileMenu.add(openItem);
+        fileMenu.add(saveItem);
+        fileMenu.add(printItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+
+        // Create "Edit" menu
+        editMenu = new JMenu("Edit");
+        cutItem = new JMenuItem("Cut");
+        copyItem = new JMenuItem("Copy");
+        pasteItem = new JMenuItem("Paste");
+
+        // Add action listeners to edit menu items
+        cutItem.addActionListener(this);
+        copyItem.addActionListener(this);
+        pasteItem.addActionListener(this);
+
+        // Add items to "Edit" menu
+        editMenu.add(cutItem);
+        editMenu.add(copyItem);
+        editMenu.add(pasteItem);
+
+        // Add menus to menu bar
+        menuBar.add(fileMenu);
+        menuBar.add(editMenu);
+
+        // Set menu bar for the frame
+        setJMenuBar(menuBar);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // Handle menu item actions
+        if (e.getSource() == openItem) {
+            openFile();
+        } else if (e.getSource() == saveItem) {
+            saveFile();
+        } else if (e.getSource() == printItem) {
+            printFile();
+        } else if (e.getSource() == exitItem) {
+            System.exit(0);
+        } else if (e.getSource() == cutItem) {
+            textArea.cut();
+        } else if (e.getSource() == copyItem) {
+            textArea.copy();
+        } else if (e.getSource() == pasteItem) {
+            textArea.paste();
+        }
+    }
+
+    private void openFile() {
+        // Implement open file functionality
+         JFileChooser fileChooser = new JFileChooser();
+        int option = fileChooser.showOpenDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                textArea.setText("");
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    textArea.append(line + "\n");
+                }
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void saveFile() {
+        // Implement save file functionality
+        JFileChooser fileChooser = new JFileChooser();
+        int option = fileChooser.showSaveDialog(this);
+        if (option == JFileChooser.APPROVE_OPTION)
+        {
+            File file = fileChooser.getSelectedFile();
+            try 
+            {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                writer.write(textArea.getText());
+                writer.close();
+            } 
+            catch (IOException e) 
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void printFile() {
+        // Print the content of the text area
+        try {
+            textArea.print();
+        } catch (PrinterException pe) {
+            pe.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Launch the text editor
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new TextEditor().setVisible(true);
+            }
+        });
+    }
+}
