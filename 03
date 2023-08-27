@@ -1,0 +1,232 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class ScientificCalculator extends JFrame implements ActionListener {
+    private JTextField textField;
+    private StringBuilder currentInput = new StringBuilder();
+
+    public ScientificCalculator() {
+        setTitle("Scientific Calculator");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 600);
+
+        textField = new JTextField();
+        textField.setEditable(false);
+        textField.setFont(new Font("Arial", Font.PLAIN, 24));
+
+        add(textField, BorderLayout.NORTH);
+
+        JPanel buttonPanel = new JPanel(new GridLayout(8, 5));
+
+        String[] buttons = {
+            "sin",      "cos",          "tan",      "","CLR",
+            "cosec",    "sec",          "cot",      "","\u232B",
+            "e",        "(",            ")",        "!",        "/",
+            "exp",      "7",            "8",        "9",        "x",
+            "pow",      "4",            "5",        "6",        "-",
+            "sqrt",     "1",            "2",        "3",        "+",
+            "ln",       "\u03C0",       "0",        ".",        "="
+        };
+
+        for (String button : buttons) {
+            JButton btn = new JButton(button);
+            btn.addActionListener(this);
+            buttonPanel.add(btn);
+        }
+
+        add(buttonPanel);
+
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String actionCommand = e.getActionCommand();
+
+        if ("CLR".equals(actionCommand)) {
+            currentInput.setLength(0);
+        } else if ("=".equals(actionCommand)) {
+            evaluate();
+        } else if ("exp".equals(actionCommand)) {
+            currentInput.append("exp(");
+        } else if ("ln".equals(actionCommand)) {
+            currentInput.append("log(");
+        } else if ("π".equals(actionCommand)) {
+            currentInput.append("π");
+        } else if ("e".equals(actionCommand)) {
+            currentInput.append("e");
+        } else if ("x".equals(actionCommand)) {
+            currentInput.append("x");
+        } else if ("(".equals(actionCommand) || ")".equals(actionCommand)) {
+            currentInput.append(actionCommand);
+        } else if ("!".equals(actionCommand)) {
+            currentInput.append("!");
+        } else if ("sqrt".equals(actionCommand)) {
+            currentInput.append("sqrt(");
+        } else if ("pow".equals(actionCommand)) {
+            currentInput.append("^");
+        } else if ("sin".equals(actionCommand) || "cos".equals(actionCommand) ||
+                   "cosec".equals(actionCommand) || "sec".equals(actionCommand) ||
+                   "tan".equals(actionCommand) || "cot".equals(actionCommand)) {
+            currentInput.append(actionCommand).append("(");
+        } else if ("⌫".equals(actionCommand)) {
+            if (currentInput.length() > 0) {
+                currentInput.deleteCharAt(currentInput.length() - 1);
+            }
+        } else {
+            currentInput.append(actionCommand);
+        }
+
+        textField.setText(currentInput.toString());
+    }
+
+    private void evaluate() {
+        try {
+            if (currentInput.toString().contains("!")) {
+                currentInput.replace(currentInput.indexOf("!"), currentInput.indexOf("!") + 1,
+                                     calculateFactorial(currentInput.toString()));
+            } else if (currentInput.toString().contains("sin(") || currentInput.toString().contains("cos(") ||
+                       currentInput.toString().contains("cosec(") || currentInput.toString().contains("sec(") ||
+                       currentInput.toString().contains("tan(") || currentInput.toString().contains("cot(")) {
+                currentInput.replace(currentInput.indexOf("sin("), currentInput.indexOf(")") + 1,
+                                     calculateTrigonometricFunction(currentInput.toString()));
+            } else {
+                currentInput.replace(0, currentInput.length(), String.valueOf(eval(currentInput.toString())));
+            }
+        } catch (Exception ex) {
+            currentInput.replace(0, currentInput.length(), "Error");
+        }
+    }
+
+    private String calculateFactorial(String expression) {
+        int num = Integer.parseInt(expression.substring(0, expression.length() - 1));
+        int result = 1;
+        for (int i = 1; i <= num; i++) {
+            result *= i;
+        }
+        return String.valueOf(result);
+    }
+
+    private String calculateTrigonometricFunction(String expression) {
+        String function = "";
+        if (expression.contains("sin(")) {
+            function = "sin";
+        } else if (expression.contains("cos(")) {
+            function = "cos";
+        } else if (expression.contains("cosec(")) {
+            function = "cosec";
+        } else if (expression.contains("sec(")) {
+            function = "sec";
+        } else if (expression.contains("tan(")) {
+            function = "tan";
+        } else if (expression.contains("cot(")) {
+            function = "cot";
+        }
+
+        double angle = Double.parseDouble(expression.substring(function.length() + 1, expression.length() - 1));
+        double result;
+
+        if (function.equals("sin")) {
+            result = Math.sin(Math.toRadians(angle));
+        } else if (function.equals("cos")) {
+            result = Math.cos(Math.toRadians(angle));
+        } else if (function.equals("cosec")) {
+            result = 1.0 / Math.sin(Math.toRadians(angle));
+        } else if (function.equals("sec")) {
+            result = 1.0 / Math.cos(Math.toRadians(angle));
+        } else if (function.equals("tan")) {
+            result = Math.tan(Math.toRadians(angle));
+        } else if (function.equals("cot")) {
+            result = 1.0 / Math.tan(Math.toRadians(angle));
+        } else {
+            result = 0;
+        }
+
+        return String.valueOf(result);
+    }
+
+    private double eval(String expression) {
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < expression.length()) ? expression.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') nextChar();
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < expression.length()) throw new RuntimeException("Unexpected: " + (char) ch);
+                return x;
+            }
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if (eat('+')) x += parseTerm(); // addition
+                    else if (eat('-')) x -= parseTerm(); // subtraction
+                    else return x;
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if (eat('*')) x *= parseFactor(); // multiplication
+                    else if (eat('/')) x /= parseFactor(); // division
+                    else return x;
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) return parseFactor(); // unary plus
+                if (eat('-')) return -parseFactor(); // unary minus
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
+                    x = Double.parseDouble(expression.substring(startPos, this.pos));
+                } else if (eatWord("sin")) {
+                    x = Math.sin(parseFactor());
+                } else if (eatWord("cos")) {
+                    x = Math.cos(parseFactor());
+                } else if (eatWord("log")) {
+                    x = Math.log10(parseFactor());
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char) ch);
+                }
+
+                if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation
+
+                return x;
+            }
+
+            boolean eatWord(String word) {
+                for (int i = 0; i < word.length(); i++) {
+                    if (word.charAt(i) != ch) return false;
+                    nextChar();
+                }
+                if (Character.isLetterOrDigit(ch)) return false;
+                return true;
+            }
+        }.parse();
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(ScientificCalculator::new);
+    }
+}
